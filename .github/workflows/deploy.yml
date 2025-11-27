@@ -10,14 +10,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+
     - name: Create Web Directory
       run: |
+        # Создаем директорию и базовые файлы
         mkdir -p web
-        echo "<!DOCTYPE html>
-        <html lang='ru'>
+        cat > web/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="ru">
         <head>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Розыгрыш подарков</title>
             <style>
                 body { 
@@ -48,22 +59,24 @@ jobs:
             </style>
         </head>
         <body>
-            <div class='container'>
+            <div class="container">
                 <h1>🎁 Розыгрыш подарков 🎁</h1>
                 <p>Приложение успешно развернуто на Firebase Hosting!</p>
-                <div class='links'>
-                    <a href='participant.html'>🚀 Участвовать в розыгрыше</a>
-                    <a href='admin.html'>🎮 Панель ведущего</a>
+                <div class="links">
+                    <a href="participant.html">🚀 Участвовать в розыгрыше</a>
+                    <a href="admin.html">🎮 Панель ведущего</a>
                 </div>
             </div>
         </body>
-        </html>" > web/index.html
+        </html>
+        EOF
 
-        echo "<!DOCTYPE html>
-        <html lang='ru'>
+        cat > web/participant.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="ru">
         <head>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Участник</title>
             <style>
                 body { 
@@ -84,19 +97,21 @@ jobs:
             </style>
         </head>
         <body>
-            <div class='container'>
+            <div class="container">
                 <h1>🎯 Участник розыгрыша</h1>
                 <p>Страница для участников</p>
-                <p><a href='index.html' style='color: #FFD700;'>← На главную</a></p>
+                <p><a href="index.html" style="color: #FFD700;">← На главную</a></p>
             </div>
         </body>
-        </html>" > web/participant.html
+        </html>
+        EOF
 
-        echo "<!DOCTYPE html>
-        <html lang='ru'>
+        cat > web/admin.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="ru">
         <head>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Админ</title>
             <style>
                 body { 
@@ -117,17 +132,19 @@ jobs:
             </style>
         </head>
         <body>
-            <div class='container'>
+            <div class="container">
                 <h1>🎮 Панель ведущего</h1>
                 <p>Панель управления розыгрышем</p>
-                <p><a href='index.html' style='color: #FFD700;'>← На главную</a></p>
+                <p><a href="index.html" style="color: #FFD700;">← На главную</a></p>
             </div>
         </body>
-        </html>" > web/admin.html
+        </html>
+        EOF
 
     - name: Create Firebase Config
       run: |
-        echo '{
+        cat > firebase.json << 'EOF'
+        {
           "hosting": {
             "public": "web",
             "ignore": [
@@ -142,12 +159,19 @@ jobs:
               }
             ]
           }
-        }' > firebase.json
+        }
+        EOF
+
+    - name: Debug - List files
+      run: |
+        echo "Directory structure:"
+        ls -la
+        echo "Web directory contents:"
+        ls -la web/
 
     - name: Deploy to Firebase
-      uses: FirebaseExtended/action-hosting-deploy@v0
-      with:
-        repoToken: '${{ secrets.GITHUB_TOKEN }}'
-        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-        channelId: live
-        projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
+      run: |
+        firebase use ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
+        firebase deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
