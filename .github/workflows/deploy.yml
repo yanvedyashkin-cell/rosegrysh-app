@@ -1,0 +1,153 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Create Web Directory
+      run: |
+        mkdir -p web
+        echo "<!DOCTYPE html>
+        <html lang='ru'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Розыгрыш подарков</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding: 50px; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }
+                .container { 
+                    max-width: 500px; 
+                    margin: 0 auto; 
+                    background: rgba(255,255,255,0.1); 
+                    padding: 30px; 
+                    border-radius: 20px; 
+                    backdrop-filter: blur(10px);
+                }
+                .links a { 
+                    display: block; 
+                    background: #FFD700; 
+                    color: #333; 
+                    padding: 15px; 
+                    margin: 10px 0; 
+                    border-radius: 10px; 
+                    text-decoration: none; 
+                    font-weight: bold; 
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h1>🎁 Розыгрыш подарков 🎁</h1>
+                <p>Приложение успешно развернуто на Firebase Hosting!</p>
+                <div class='links'>
+                    <a href='participant.html'>🚀 Участвовать в розыгрыше</a>
+                    <a href='admin.html'>🎮 Панель ведущего</a>
+                </div>
+            </div>
+        </body>
+        </html>" > web/index.html
+
+        echo "<!DOCTYPE html>
+        <html lang='ru'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Участник</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding: 50px; 
+                    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+                    color: white;
+                }
+                .container { 
+                    max-width: 400px; 
+                    margin: 0 auto; 
+                    background: rgba(255,255,255,0.1); 
+                    padding: 30px; 
+                    border-radius: 20px; 
+                    backdrop-filter: blur(10px);
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h1>🎯 Участник розыгрыша</h1>
+                <p>Страница для участников</p>
+                <p><a href='index.html' style='color: #FFD700;'>← На главную</a></p>
+            </div>
+        </body>
+        </html>" > web/participant.html
+
+        echo "<!DOCTYPE html>
+        <html lang='ru'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Админ</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding: 50px; 
+                    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+                    color: white;
+                }
+                .container { 
+                    max-width: 600px; 
+                    margin: 0 auto; 
+                    background: rgba(255,255,255,0.1); 
+                    padding: 30px; 
+                    border-radius: 20px; 
+                    backdrop-filter: blur(10px);
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h1>🎮 Панель ведущего</h1>
+                <p>Панель управления розыгрышем</p>
+                <p><a href='index.html' style='color: #FFD700;'>← На главную</a></p>
+            </div>
+        </body>
+        </html>" > web/admin.html
+
+    - name: Create Firebase Config
+      run: |
+        echo '{
+          "hosting": {
+            "public": "web",
+            "ignore": [
+              "firebase.json",
+              "**/.*",
+              "**/node_modules/**"
+            ],
+            "rewrites": [
+              {
+                "source": "**",
+                "destination": "/index.html"
+              }
+            ]
+          }
+        }' > firebase.json
+
+    - name: Deploy to Firebase
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+        channelId: live
+        projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
